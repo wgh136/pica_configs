@@ -5,7 +5,7 @@ key = "ikmmh"
 
 version = "1.0.0"
 
-url = ""
+url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/ikmmh.toml"
 
 [account]
 
