@@ -55,7 +55,9 @@ type = "singlePageWithMultiPart" # "multiPageComicList"或者"singlePageWithMult
 loadMultiPart = """
 async function loadMultiPart(){
     try{
-        let res = await Network.get("https://ymcdnyfqdapp.ikmmh.com/")
+        let res = await Network.get("https://ymcdnyfqdapp.ikmmh.com/", {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        })
         if(res.status !== 200){
             error("Invalid status code: " + res.status)
         }
@@ -127,7 +129,9 @@ async function load(category, param, options, page){
         } else {
             url = `https://ymcdnyfqdapp.ikmmh.com/booklists/${options[1]}/${category}/${options[0]}/${page}.html`
         }
-        let res = await Network.get(url)
+        let res = await Network.get(url, {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        })
         if(res.status !== 200){
             error("Invalid status code: " + res.status)
         }
@@ -195,7 +199,9 @@ notShowWhen = ["星期一", "星期二", "星期三", "星期四", "星期五", 
 load = """
 async function load(keyword, options, page){
     try{
-        let res = await Network.get(`https://ymcdnyfqdapp.ikmmh.com/search?searchkey=${encodeURIComponent(keyword)}`)
+        let res = await Network.get(`https://ymcdnyfqdapp.ikmmh.com/search?searchkey=${encodeURIComponent(keyword)}`, {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        })
         if(res.status !== 200){
             error("Invalid status code: " + res.status)
         }
@@ -232,7 +238,9 @@ addOrDelFavorite = """
 async function addOrDelFavorite(comicId, folderId, isAdding){
     let id = comicId.split("/")[4]
     if(isAdding){
-        let comicInfoRes = await Network.get(comicId);
+        let comicInfoRes = await Network.get(comicId, {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        });
         if(comicInfoRes.status !== 200){
             error("Invalid status code: " + res.status)
             return;
@@ -257,6 +265,7 @@ async function addOrDelFavorite(comicId, folderId, isAdding){
     } else {
         let res = await Network.post("https://ymcdnyfqdapp.ikmmh.com/api/user/bookcase/del", {
             "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         }, `articleid=${id}`)
         if(res.status !== 200){
             error("Invalid status code: " + res.status)
@@ -279,6 +288,7 @@ async function loadComics(page, folder){
     try{
         let res = await Network.post("https://ymcdnyfqdapp.ikmmh.com/api/user/bookcase/ajax", {
             "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         }, `page=${page}`)
         if(res.status !== 200){
             error("Invalid status code: " + res.status)
@@ -317,7 +327,9 @@ async function loadComics(page, folder){
 loadInfo = """
 async function loadInfo(id){
     try{
-        let res = await Network.get(id)
+        let res = await Network.get(id, {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        })
         if(res.status !== 200){
             error("Invalid status code: " + res.status)
         }
