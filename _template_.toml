@@ -1,0 +1,213 @@
+name = "<name>"
+
+# 唯一标识符
+key = "<key>"
+
+version = "1.0.0"
+
+url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/<fileName>"
+
+# 启动时执行的js代码
+init = """
+function init(){
+    // init
+}
+"""
+
+[account]
+
+[account.login]
+js = """
+async function login(account, pwd){
+    try {
+        // 请使用`success`和`error`方法返回结果
+    }
+    catch(e) {
+        error(e.toString())
+    }
+}
+"""
+
+[account.logout]
+# 列出需要清除的数据
+# 列出需要清除cookies的域名
+cookies = []
+# 列出使用`setData`方法储存的数据的key
+data = []
+
+[account.register]
+website = "<url>" # 在登录页面显示一个注册按钮, 点击后在浏览器打开此网页
+
+[explore]
+
+[[explore.pages]]
+# title同时会被作为分类页面的key, 请确保其唯一性
+title = "<pageName>"
+type = "singlePageWithMultiPart" # "multiPageComicList"或者"singlePageWithMultiPart"
+loadMultiPart = """
+async function loadMultiPart(){
+    try{
+        // 请使用`success`和`error`方法返回结果
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[[explore.pages]]
+# title同时会被作为分类页面的key, 请确保其唯一性
+title = "<pageName>"
+type = "multiPageComicList" # "multiPageComicList"或者"singlePageWithMultiPart"
+loadMultiPart = """
+async function loadPage(){
+    try{
+        // 请使用`success`和`error`方法返回结果
+        // success({
+        //  maxPage = ?,
+        //  comics = []
+        //})
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[category]
+# title同时会被作为分类页面的key, 请确保其唯一性
+title = "<title>"
+enableRankingPage = false
+
+[[category.parts]]
+name = "<name>"
+type = "fixed" # "fixed"或者"random". 如果为random, 需要设置字段`randomNumber`, 将在提供的标签中随机显示指定的数量
+categories = []
+itemType = "category" # 仅接受"category"或者"search", 或者"search_with_namespace", 用户点击时, 如果为category, 将进入定义的分类页面, 如果为search, 将进入搜索页面, 如果为search_with_namespace, 将会使用此部分的name作为namespace.
+
+[[category.parts]]
+name = "<name>"
+type = "fixed"
+categories = []
+itemType = "category"
+# categoryParams用于提供分类页面的参数,
+# 如果提供该字段, 其长度必须与categories相等,
+# 加载分类页面的函数的参数中的param将不为null
+categoryParams = []
+
+[categoryComics]
+load = """
+async function load(category, param, options, page){
+    try{
+        // 请使用`success`和`error`方法返回结果
+        //success({
+        //    comics: [],
+        //    maxPage: ?
+        //})
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[[categoryComics.options]]
+# content 用于提供分类页面的选项, 按照如下格式, 使用`-`分割, 左侧为加载使用的参数, 右侧为显示在屏幕上的选项文字
+content = """
+1-选项1
+2-选项2
+3-选项3
+"""
+# notShowWhen提供一个列表, 当分类页面的名称为列表中的任意一个时, 将不会显示此选项
+notShowWhen = ["a", "b", "c"]
+
+[[categoryComics.options]]
+content = """
+1-选项1
+2-选项2
+3-选项3
+"""
+notShowWhen = ["a", "b", "c"]
+
+[search]
+load = """
+async function load(keyword, options, page){
+    try{
+        // 请使用`success`和`error`方法返回结果
+        // success({
+        //     comics: [],
+        //     maxPage: ?
+        // })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[favorite]
+multiFolder = false
+addOrDelFavorite = """
+async function addOrDelFavorite(comicId, folderId, isAdding){
+    if(isAdding){
+        // 添加收藏
+    } else {
+        // 删除收藏
+    }
+}
+
+"""
+loadComics = """
+async function loadComics(page, folder){
+    try{
+        // 请使用`success`和`error`方法返回结果
+        // success({
+        //     comics: comics,
+        //     maxPage: maxPage
+        // })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[comic]
+
+loadInfo = """
+async function loadInfo(id){
+    try{
+        // success({
+        //    title: title,
+        //    cover: cover,
+        //    description: description,
+        //    tags: {
+        //        "作者": [author],
+        //        "更新": [updateTime],
+        //        "标签": tags
+        //    },
+        //    chapters: eps,
+        //    suggestions: comics
+        // })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+loadEp = """
+async function loadEp(comicId, epId){
+    try{
+        // success({
+        //     images: document.querySelectorAll("img.lazy").map(e => e.attributes["data-src"])
+        // })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+# 适用于漫画的id是url时, 提取id用于漫画储存的正则表达式
+matchBriefIdRegex = "https://example.com/book/(\\d+)/"
