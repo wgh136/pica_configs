@@ -1,0 +1,477 @@
+name = "拷贝漫画"
+
+# 唯一标识符
+key = "copy_manga"
+
+version = "1.0.0"
+
+minAppVersion = "2.4.0"
+
+url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/copy_manga.toml"
+
+# 启动时执行的js代码
+init = """
+function init(){
+    let token = loadData("token");
+    if(!token){
+        token = "";
+    } else {
+        token = " " + token;
+    }
+    tempData.copyHeaders = {
+        "User-Agent": "COPY/2.0.7",
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip",
+        "source": "copyApp",
+        "webp": "1",
+        "region": "1",
+        "version": "2.0.7",
+        "authorization": `Token${token}`,
+        "platform": "3",
+    }
+}
+
+"""
+
+[account]
+
+[account.login]
+js = """
+async function login(account, pwd){
+    try{
+        let salt = randomInt(1000, 9999)
+        let base64 = Convert.encodeBase64(`${pwd}-${salt}`)
+        let res = await Network.post(
+            "https://api.copymanga.tv/api/v3/login?platform=3",
+            {
+                ...tempData.copyHeaders,
+                "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
+            },
+            `username=${account}&password=${base64}\n&salt=${salt}&platform=3&authorization=Token+&version=1.4.4&source=copyApp&region=1&webp=1`
+        );
+        if(res.status === 200){
+            let data = JSON.parse(res.body)
+            let token = data.results.token
+            setData('token', token)
+            tempData.copyHeaders = {
+                "User-Agent": "COPY/2.0.7",
+                "Accept": "*/*",
+                "Accept-Encoding": "gzip",
+                "source": "copyApp",
+                "webp": "1",
+                "region": "1",
+                "version": "2.0.7",
+                "authorization": `Token${token}`,
+                "platform": "3",
+            }
+            success("ok")
+        } else {
+            error("Failed")
+        }
+    }
+    catch(e) {
+        error(e.toString())
+    }
+}
+"""
+
+[account.logout]
+# 列出需要清除的数据
+# 列出需要清除cookies的域名
+cookies = []
+# 列出使用`setData`方法储存的数据的key
+data = ['token']
+
+[account.register]
+website = "https://www.copymanga.site/web/login/loginByAccount" 
+
+[explore]
+
+[[explore.pages]]
+title = "拷贝漫画"
+type = "singlePageWithMultiPart"
+loadMultiPart = """
+async function loadMultiPart(){
+    try{
+        let dataStr = await Network.get(
+            "https://api.copymanga.tv/api/v3/h5/homeIndex?platform=3",
+            tempData.copyHeaders
+        )
+
+        if(dataStr.status !== 200){
+            error(`Invalid status code: ${dataStr.status}`)
+        }
+
+        let data = JSON.parse(dataStr.body)
+
+        function parseComic(comic) {
+            if(comic["comic"] !== null && comic["comic"] !== undefined){
+                comic = comic["comic"]
+            }
+            let tags = []
+            if(comic["theme"] !== null && comic["theme"] !== undefined){
+                tags = comic["theme"].map(t => t["name"])
+            }
+            let author = null
+
+            if(Array.isArray(comic["author"]) && comic["author"].length > 0){
+                author = comic["author"][0]["name"]
+            }
+
+            return {
+                id: comic["path_word"],
+                title: comic["name"],
+                subTitle: author,
+                cover: comic["cover"],
+                tags: tags
+            }
+        }
+
+        let res = {}
+        res["推荐"] = data["results"]["recComics"]["list"].map(parseComic)
+        res["热门"] = data["results"]["hotComics"].map(parseComic)
+        res["最新"] = data["results"]["newComics"].map(parseComic)
+        res["完结"] = data["results"]["finishComics"]["list"].map(parseComic)
+        res["今日排行"] = data["results"]["rankDayComics"]["list"].map(parseComic)
+        res["本周排行"] = data["results"]["rankWeekComics"]["list"].map(parseComic)
+        res["本月排行"] = data["results"]["rankMonthComics"]["list"].map(parseComic)
+
+        success(res)
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[category]
+# title同时会被作为分类页面的key, 请确保其唯一性
+title = "拷贝漫画"
+enableRankingPage = false
+
+[[category.parts]]
+name = "主题"
+type = "fixed"
+categories = ["全部", "爱情", "欢乐向", "冒险", "奇幻", "百合", "校园", "科幻", "东方", "耽美", "生活", "格斗", "轻小说", "悬疑",
+    "其它", "神鬼", "职场", "TL", "萌系", "治愈", "长条"]
+itemType = "category"
+categoryParams = ["", "aiqing", "huanlexiang", "maoxian", "qihuan", "baihe", "xiaoyuan", "kehuan", "dongfang", "danmei", "shenghuo", "gedou", "qingshuo", "xuanyi",
+    "qita", "shengui", "zhichang", "teenslove", "mengxi", "zhiliao", "changtiao"]
+
+[categoryComics]
+load = """
+async function load(category, param, options, page){
+    try{
+        options = options.map(e => e.replace("*", "-"))
+        let res = await Network.get(
+            `https://api.copymanga.tv/api/v3/comics?limit=21&offset=${(page-1)*21}&ordering=${options[1]}&theme=${param}&top=${options[0]}&platform=3`,
+            tempData.copyHeaders
+        )
+        if (res.status !== 200){
+            error(`Invalid status code: ${res.status}`)
+        }
+
+        let data = JSON.parse(res.body)
+
+        function parseComic(comic) {
+            if(comic["comic"] !== null && comic["comic"] !== undefined){
+                comic = comic["comic"]
+            }
+            let tags = []
+            if(comic["theme"] !== null && comic["theme"] !== undefined){
+                tags = comic["theme"].map(t => t["name"])
+            }
+            let author = null
+
+            if(Array.isArray(comic["author"]) && comic["author"].length > 0){
+                author = comic["author"][0]["name"]
+            }
+
+            return {
+                id: comic["path_word"],
+                title: comic["name"],
+                subTitle: author,
+                cover: comic["cover"],
+                tags: tags,
+                description: comic["datetime_updated"]
+            }
+        }
+
+        success({
+            comics: data["results"]["list"].map(parseComic),
+            maxPage: (data["results"]["total"] - (data["results"]["total"] % 21)) / 21 + 1
+        })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[[categoryComics.options]]
+content = """
+-全部
+japan-日漫
+korea-韩漫
+west-美漫
+finish-已完结
+"""
+notShowWhen = []
+
+[[categoryComics.options]]
+content = """
+*datetime_updated-时间倒序
+datetime_updated-时间正序
+*popular-热度倒序
+popular-热度正序
+"""
+notShowWhen = []
+
+[search]
+load = """
+async function load(keyword, options, page){
+    try{
+        keyword = encodeURIComponent(keyword)
+        var res = await Network.get(
+            `https://api.copymanga.tv/api/v3/search/comic?limit=21&offset=${(page-1)*21}&q=${keyword}&q_type=&platform=3`,
+            tempData.copyHeaders
+        )
+        if (res.status !== 200){
+            error(`Invalid status code: ${res.status}`)
+        }
+
+        let data = JSON.parse(res.body)
+
+        function parseComic(comic) {
+            if(comic["comic"] !== null && comic["comic"] !== undefined){
+                comic = comic["comic"]
+            }
+            let tags = []
+            if(comic["theme"] !== null && comic["theme"] !== undefined){
+                tags = comic["theme"].map(t => t["name"])
+            }
+            let author = null
+
+            if(Array.isArray(comic["author"]) && comic["author"].length > 0){
+                author = comic["author"][0]["name"]
+            }
+
+            return {
+                id: comic["path_word"],
+                title: comic["name"],
+                subTitle: author,
+                cover: comic["cover"],
+                tags: tags,
+                description: comic["datetime_updated"]
+            }
+        }
+
+        success({
+            comics: data["results"]["list"].map(parseComic),
+            maxPage: (data["results"]["total"] - (data["results"]["total"] % 21)) / 21 + 1
+        })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[favorite]
+multiFolder = false
+addOrDelFavorite = """
+async function addOrDelFavorite(comicId, folderId, isAdding){
+    try{
+        let is_collect = isAdding ? 1 : 0
+        let token = loadData("token");
+        let comicData = await Network.get(
+            `https://api.copymanga.tv/api/v3/comic2/${comicId}?platform=3`,
+            tempData.copyHeaders
+        )
+        if (comicData.status !== 200){
+            error(`Invalid status code: ${comicData.status}`);
+        }
+        let comic_id = JSON.parse(comicData.body).results.comic.uuid
+        let res = await Network.post(
+            "https://api.copymanga.tv/api/v3/member/collect/comic?platform=3",
+            {
+                ...tempData.copyHeaders,
+                "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+            },
+            `comic_id=${comic_id}&is_collect=${is_collect}&authorization=Token+${token}`
+        )
+        if (res.status !== 200){
+            error(`Invalid status code: ${res.status}`);
+        }
+        success("ok")
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+
+"""
+loadComics = """
+async function loadComics(page, folder){
+    try{
+        var res = await Network.get(
+            `https://api.copymanga.tv/api/v3/member/collect/comics?limit=21&offset=${(page-1)*21}&free_type=1&ordering=-datetime_updated&platform=3`,
+            tempData.copyHeaders
+        )
+        if (res.status !== 200){
+            error(`Invalid status code: ${res.status}`)
+        }
+
+        let data = JSON.parse(res.body)
+
+        function parseComic(comic) {
+            if(comic["comic"] !== null && comic["comic"] !== undefined){
+                comic = comic["comic"]
+            }
+            let tags = []
+            if(comic["theme"] !== null && comic["theme"] !== undefined){
+                tags = comic["theme"].map(t => t["name"])
+            }
+            let author = null
+
+            if(Array.isArray(comic["author"]) && comic["author"].length > 0){
+                author = comic["author"][0]["name"]
+            }
+
+            return {
+                id: comic["path_word"],
+                title: comic["name"],
+                subTitle: author,
+                cover: comic["cover"],
+                tags: tags,
+                description: comic["datetime_updated"]
+            }
+        }
+
+        success({
+            comics: data["results"]["list"].map(parseComic),
+            maxPage: (data["results"]["total"] - (data["results"]["total"] % 21)) / 21 + 1
+        })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+[comic]
+
+loadInfo = """
+async function getChapters(id){
+    var res = await Network.get(
+      `https://api.copymanga.tv/api/v3/comic/${id}/group/default/chapters?limit=500&offset=0&platform=3`,
+      tempData.copyHeaders
+    );
+    if (res.status !== 200){
+        throw `Invalid status code: ${res.status}`;
+    }
+    let data = JSON.parse(res.body);
+    let eps = new Map();
+    data.results.list.forEach((e) => {
+        let title = e.name;
+        let id = e.uuid;
+        eps[id] = title;
+    });
+    let maxChapter = data.results.total;
+    if (maxChapter > 500){
+        let offset = 500;
+        while (offset < maxChapter){
+            res = await Network.get(
+              `https://api.copymanga.tv/api/v3/comic/chongjingchengweimofashaonv/group/default/chapters?limit=500&offset=${offset}&platform=3`,
+              tempData.copyHeaders
+            );
+            if (res.status !== 200){
+                throw `Invalid status code: ${res.status}`;
+            }
+            data = JSON.parse(res.body);
+            data.results.list.forEach((e) => {
+                let title = e.name;
+                let id = e.uuid;
+                eps[id] = title;
+            });
+            offset += 500;
+        }
+    }
+    return eps;
+}
+
+async function getFavoriteStatus(id){
+    let res = await Network.get(`https://api.copymanga.tv/api/v3/comic2/${id}/query?platform=3`, tempData.copyHeaders);
+    if (res.status !== 200){
+        throw `Invalid status code: ${res.status}`;
+    }
+    return JSON.parse(res.body).results.collect != null;
+}
+
+async function loadInfo(id){
+    try{
+        let results = await Promise.all([
+            Network.get(
+                `https://api.copymanga.tv/api/v3/comic2/${id}?platform=3`,
+                tempData.copyHeaders
+            ),
+            getChapters(id),
+            getFavoriteStatus(id)
+        ])
+
+        if (results[0].status !== 200){
+            throw `Invalid status code: ${res.status}`;
+        }
+
+        let comicData = JSON.parse(results[0].body).results.comic;
+
+        let title = comicData.name;
+        let cover = comicData.cover;
+        let authors = comicData.author.map(e => e.name);
+        let tags = comicData.theme.map(e => e.name);
+        let updateTime = comicData.datetime_updated;
+        let description = comicData.brief;
+
+
+        success({
+           title: title,
+           cover: cover,
+           description: description,
+           tags: {
+               "作者": authors,
+               "更新": [updateTime],
+               "标签": tags
+           },
+           chapters: results[1],
+           isFavorite: results[2]
+        })
+    }
+    catch (e){
+        error(e.toString())
+    }
+}
+"""
+
+loadEp = """
+async function loadEp(comicId, epId){
+    try{
+        let res = await Network.get(
+            `https://api.copymanga.tv/api/v3/comic/${comicId}/chapter2/${epId}?platform=3`,
+            tempData.copyHeaders
+        );
+
+        if (res.status !== 200){
+            throw `Invalid status code: ${res.status}`;
+        }
+
+        let data = JSON.parse(res.body);
+
+        success({
+            images: data.results.chapter.contents.map(e => e.url)
+        });
+    }
+    catch (e){
+        error(e.toString());
+    }
+}
+"""
