@@ -3,7 +3,7 @@ name = "拷贝漫画"
 # 唯一标识符
 key = "copy_manga"
 
-version = "1.0.1"
+version = "1.0.2"
 
 minAppVersion = "2.4.0"
 
@@ -83,7 +83,7 @@ cookies = []
 data = ['token']
 
 [account.register]
-website = "https://www.copymanga.site/web/login/loginByAccount" 
+website = "https://www.copymanga.site/web/login/loginByAccount"
 
 [explore]
 
@@ -466,8 +466,18 @@ async function loadEp(comicId, epId){
 
         let data = JSON.parse(res.body);
 
+        let imagesUrls = data.results.chapter.contents.map(e => e.url)
+
+        let orders = data.results.chapter.words
+
+        let images = imagesUrls.map(e => "")
+
+        for(let i=0; i < imagesUrls.length; i++){
+            images[orders[i]] = imagesUrls[i]
+        }
+
         success({
-            images: data.results.chapter.contents.map(e => e.url)
+            images: images
         });
     }
     catch (e){
