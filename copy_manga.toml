@@ -3,7 +3,7 @@ name = "拷贝漫画"
 # 唯一标识符
 key = "copy_manga"
 
-version = "1.0.0"
+version = "1.0.1"
 
 minAppVersion = "2.4.0"
 
@@ -61,7 +61,7 @@ async function login(account, pwd){
                 "webp": "1",
                 "region": "1",
                 "version": "2.0.7",
-                "authorization": `Token${token}`,
+                "authorization": `Token ${token}`,
                 "platform": "3",
             }
             success("ok")
