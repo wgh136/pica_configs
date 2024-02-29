@@ -3,7 +3,7 @@ name = "拷贝漫画"
 # 唯一标识符
 key = "copy_manga"
 
-version = "1.0.2"
+version = "1.0.3"
 
 minAppVersion = "2.4.0"
 
@@ -443,7 +443,8 @@ async function loadInfo(id){
                "标签": tags
            },
            chapters: results[1],
-           isFavorite: results[2]
+           isFavorite: results[2],
+           subId: comicData.uuid
         })
     }
     catch (e){
@@ -479,6 +480,77 @@ async function loadEp(comicId, epId){
         success({
             images: images
         });
+    }
+    catch (e){
+        error(e.toString());
+    }
+}
+"""
+
+loadComments = """
+async function loadComments(comicId, subId, page, replyTo){
+    try{
+        let url = `https://api.copymanga.tv/api/v3/comments?comic_id=${subId}&limit=20&offset=${(page-1)*20}`;
+        if(replyTo){
+            url = url + `&reply_id=${replyTo}&_update=true`;
+        }
+        let res = await Network.get(
+            url,
+            tempData.copyHeaders,
+        );
+
+        if (res.status !== 200){
+            throw `Invalid status code: ${res.status}`;
+        }
+
+        let data = JSON.parse(res.body);
+
+        let total = data.results.total;
+
+        success({
+            comments: data.results.list.map(e => {
+                return {
+                    userName: e.user_name,
+                    avatar: e.user_avatar,
+                    content: e.comment,
+                    time: e.create_at,
+                    replyCount: e.count,
+                    id: e.id,
+                }
+            }),
+            maxPage: (total - (total % 20)) / 20 + 1,
+        })
+    }
+    catch (e){
+        error(e.toString());
+    }
+}
+"""
+
+sendComment = """
+async function sendComment(comicId, subId, content, replyTo){
+    let token = loadData("token");
+    if(!token){
+        error("未登录");
+    }
+    if(!replyTo){
+        replyTo = '';
+    }
+    try{
+        let res = await Network.post(
+            `https://api.copymanga.tv/api/v3/member/comment`,
+            {
+                ...tempData.copyHeaders,
+                "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+            },
+            `comic_id=${subId}&comment=${encodeURIComponent(content)}&reply_id=${replyTo}`,
+        );
+
+        if (res.status !== 200){
+            throw `Invalid status code: ${res.status}`;
+        } else {
+            success("ok")
+        }
     }
     catch (e){
         error(e.toString());
