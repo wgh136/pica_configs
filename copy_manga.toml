@@ -238,6 +238,7 @@ async function load(keyword, options, page){
         )
         if (res.status !== 200){
             error(`Invalid status code: ${res.status}`)
+            return;
         }
 
         let data = JSON.parse(res.body)
@@ -290,6 +291,7 @@ async function addOrDelFavorite(comicId, folderId, isAdding){
         )
         if (comicData.status !== 200){
             error(`Invalid status code: ${comicData.status}`);
+            return;
         }
         let comic_id = JSON.parse(comicData.body).results.comic.uuid
         let res = await Network.post(
@@ -325,10 +327,12 @@ async function loadComics(page, folder){
 
         if (res.status === 401){
             error(`Login expired`);
+            return;
         }
 
         if (res.status !== 200){
             error(`Invalid status code: ${res.status}`)
+            return;
         }
 
         let data = JSON.parse(res.body)
