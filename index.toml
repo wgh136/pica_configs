@@ -6,6 +6,6 @@ description = "网站: https://ymcdnyfqdapp.ikmmh.com/"
 
 [[source]]
 name = "拷贝漫画"
-version = "1.0.3"
+version = "1.0.4"
 fileName = "copy_manga.toml"
 description = "网站: https://www.copymanga.site/"

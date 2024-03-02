@@ -3,9 +3,9 @@ name = "拷贝漫画"
 # 唯一标识符
 key = "copy_manga"
 
-version = "1.0.3"
+version = "1.0.4"
 
-minAppVersion = "2.4.0"
+minAppVersion = "3.0.0"
 
 url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/copy_manga.toml"
 
@@ -300,6 +300,10 @@ async function addOrDelFavorite(comicId, folderId, isAdding){
             },
             `comic_id=${comic_id}&is_collect=${is_collect}&authorization=Token+${token}`
         )
+        if (res.status === 401){
+            error(`Login expired`);
+            return;
+        }
         if (res.status !== 200){
             error(`Invalid status code: ${res.status}`);
         }
@@ -318,6 +322,11 @@ async function loadComics(page, folder){
             `https://api.copymanga.tv/api/v3/member/collect/comics?limit=21&offset=${(page-1)*21}&free_type=1&ordering=-datetime_updated&platform=3`,
             tempData.copyHeaders
         )
+
+        if (res.status === 401){
+            error(`Login expired`);
+        }
+
         if (res.status !== 200){
             error(`Invalid status code: ${res.status}`)
         }
@@ -545,6 +554,11 @@ async function sendComment(comicId, subId, content, replyTo){
             },
             `comic_id=${subId}&comment=${encodeURIComponent(content)}&reply_id=${replyTo}`,
         );
+
+        if (res.status === 401){
+            error(`Login expired`);
+            return;
+        }
 
         if (res.status !== 200){
             throw `Invalid status code: ${res.status}`;
