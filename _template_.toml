@@ -5,6 +5,8 @@ key = "<key>"
 
 version = "1.0.0"
 
+minAppVersion = "3.0.0"
+
 url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/<fileName>"
 
 # 启动时执行的js代码
@@ -187,6 +189,7 @@ async function loadInfo(id){
         //        "标签": tags
         //    },
         //    chapters: eps,
+        //    subId: subId, # subId是一个可选项, 表示此漫画的另一个标识符, 如果存在, 将会在加载章节时传递给loadEp函数
         //    suggestions: comics
         // })
     }
@@ -209,5 +212,19 @@ async function loadEp(comicId, epId){
 }
 """
 
-# 适用于漫画的id是url时, 提取id用于漫画储存的正则表达式
+loadComments = """
+async function loadComments(comicId, subId, page, replyTo){
+
+}
+"""
+
+sendComment = """
+async function sendComment(comicId, subId, content, replyTo){
+
+}
+"""
+
+
+# 适用于漫画的id是url时, 提取标识符用于漫画储存的正则表达式
+# 此标识符将用于储存漫画的文件夹名
 matchBriefIdRegex = "https://example.com/book/(\\d+)/"
