@@ -19,13 +19,13 @@ function init(){
         token = " " + token;
     }
     tempData.copyHeaders = {
-        "User-Agent": "COPY/2.0.7",
+        "User-Agent": "COPY/2.1.7",
         "Accept": "*/*",
         "Accept-Encoding": "gzip",
         "source": "copyApp",
         "webp": "1",
         "region": "1",
-        "version": "2.0.7",
+        "version": "2.1.7",
         "authorization": `Token${token}`,
         "platform": "3",
     }
