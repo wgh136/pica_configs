@@ -3,7 +3,7 @@ name = "拷贝漫画"
 # 唯一标识符
 key = "copy_manga"
 
-version = "1.0.4"
+version = "1.0.5"
 
 minAppVersion = "3.0.0"
 
