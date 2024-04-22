@@ -1,4 +1,5 @@
 class Komiic extends ComicSource {
+
     // 此漫画源的名称
     name = "Komiic"
 
@@ -12,13 +13,20 @@ class Komiic extends ComicSource {
     // 更新链接
     url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/komiic.js"
 
-    headers = {
-        'Referer': 'https://komiic.com/login',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Content-Type': 'application/json'
+    get headers() {
+        let token = this.loadData('token')
+        let headers = {
+            'Referer': 'https://komiic.com/',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Content-Type': 'application/json'
+        }
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+        }
+        return headers
     }
 
-    async queryJson(query){
+    async queryJson(query) {
         let operationName = query["operationName"]
 
         let res = await Network.post(
@@ -27,22 +35,26 @@ class Komiic extends ComicSource {
             query
         )
 
-        if(res.status !== 200) {
+        if (res.status !== 200) {
             throw `Invalid Status Code ${res.status}`
         }
 
         let json = JSON.parse(res.body)
 
+        if (json.errors != undefined) {
+            throw json.errors[0].message
+        }
+
         return json
     }
 
-    async queryComics(query){
+    async queryComics(query) {
         let operationName = query["operationName"]
-        let json = this.queryJson(query)
+        let json = await this.queryJson(query)
 
-        function parseComic(comic){
+        function parseComic(comic) {
             let author = ''
-            if(comic.authors.length > 0) {
+            if (comic.authors.length > 0) {
                 author = comic.authors[0].name
             }
             let tags = []
@@ -53,20 +65,20 @@ class Komiic extends ComicSource {
             function getTimeDifference(date) {
                 const now = new Date();
                 const timeDifference = now - date;
-              
+
                 const millisecondsPerHour = 1000 * 60 * 60;
                 const millisecondsPerDay = millisecondsPerHour * 24;
-              
+
                 if (timeDifference < millisecondsPerHour) {
-                  return '剛剛更新';
+                    return '剛剛更新';
                 } else if (timeDifference < millisecondsPerDay) {
-                  const hours = Math.floor(timeDifference / millisecondsPerHour);
-                  return `${hours}小時前更新`;
+                    const hours = Math.floor(timeDifference / millisecondsPerHour);
+                    return `${hours}小時前更新`;
                 } else {
-                  const days = Math.floor(timeDifference / millisecondsPerDay);
-                  return `${days}天前更新`;
+                    const days = Math.floor(timeDifference / millisecondsPerDay);
+                    return `${days}天前更新`;
                 }
-              }
+            }
 
             let updateTime = new Date(comic.dateUpdated)
             let description = getTimeDifference(updateTime)
@@ -103,7 +115,7 @@ class Komiic extends ComicSource {
                 }
             )
 
-            if(res.status === 200) {
+            if (res.status === 200) {
                 this.saveData('token', JSON.parse(res.body).token)
                 return 'ok'
             }
@@ -131,13 +143,14 @@ class Komiic extends ComicSource {
             type: "multiPageComicList",
 
             load: async (page) => {
-                return await this.queryComics({"operationName":"recentUpdate","variables":{"pagination":{"limit":20,"offset":(page-1)*20,"orderBy":"DATE_UPDATED","status":"","asc":true}},"query":"query recentUpdate($pagination: Pagination!) {\n  recentUpdate(pagination: $pagination) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}"})
+                return await this.queryComics({ "operationName": "recentUpdate", "variables": { "pagination": { "limit": 20, "offset": (page - 1) * 20, "orderBy": "DATE_UPDATED", "status": "", "asc": true } }, "query": "query recentUpdate($pagination: Pagination!) {\n  recentUpdate(pagination: $pagination) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}" })
             }
         }
     ]
 
     category = {
         title: "Komiic",
+        enableRankingPage: true,
         parts: [
             {
                 name: "主题",
@@ -149,7 +162,7 @@ class Komiic extends ComicSource {
                 itemType: "category",
 
                 // 若提供, 数量需要和`categories`一致, `categoryComics.load`方法将会收到此参数
-                categoryParams: ['all', '1', '3', '4', '5', '6', '7', '8', '10', '11', '2', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '9', '28', '31', '32', '33', '34', '35', '36', '37',  '40', '42']
+                categoryParams: ['0', '1', '3', '4', '5', '6', '7', '8', '10', '11', '2', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '9', '28', '31', '32', '33', '34', '35', '36', '37', '40', '42']
             }
         ]
     }
@@ -157,7 +170,7 @@ class Komiic extends ComicSource {
     /// 分类漫画页面, 即点击分类标签后进入的页面
     categoryComics = {
         load: async (category, param, options, page) => {
-            return await this.queryComics({"operationName":"comicByCategory","variables":{"categoryId":param,"pagination":{"limit":30,"offset":(page-1)*30,"orderBy":options[0],"asc":false,"status":options[1]}},"query":"query comicByCategory($categoryId: ID!, $pagination: Pagination!) {\n  comicByCategory(categoryId: $categoryId, pagination: $pagination) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}"})
+            return await this.queryComics({ "operationName": "comicByCategory", "variables": { "categoryId": param, "pagination": { "limit": 30, "offset": (page - 1) * 30, "orderBy": options[0], "asc": false, "status": options[1] } }, "query": "query comicByCategory($categoryId: ID!, $pagination: Pagination!) {\n  comicByCategory(categoryId: $categoryId, pagination: $pagination) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}" })
         },
         // 提供选项
         optionList: [
@@ -179,13 +192,69 @@ class Komiic extends ComicSource {
                 notShowWhen: null,
                 showWhen: null
             },
-        ]
+        ],
+        ranking: {
+            options: [
+                "MONTH_VIEWS-月",
+                "VIEWS-綜合"
+            ],
+            load: async (option, page) => {
+                return this.queryComics({ "operationName": "hotComics", "variables": { "pagination": { "limit": 20, "offset": (page - 1) * 20, "orderBy": option, "status": "", "asc": true } }, "query": "query hotComics($pagination: Pagination!) {\n  hotComics(pagination: $pagination) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}" })
+            }
+        }
     }
 
     /// 搜索
     search = {
         load: async (keyword, options, page) => {
-            return await this.queryComics({"operationName":"searchComicAndAuthorQuery","variables":{"keyword":keyword},"query":"query searchComicAndAuthorQuery($keyword: String!) {\n  searchComicsAndAuthors(keyword: $keyword) {\n    comics {\n      id\n      title\n      status\n      year\n      imageUrl\n      authors {\n        id\n        name\n        __typename\n      }\n      categories {\n        id\n        name\n        __typename\n      }\n      dateUpdated\n      monthViews\n      views\n      favoriteCount\n      lastBookUpdate\n      lastChapterUpdate\n      __typename\n    }\n    authors {\n      id\n      name\n      chName\n      enName\n      wikiLink\n      comicCount\n      views\n      __typename\n    }\n    __typename\n  }\n}"})
+            let json = await this.queryJson({ "operationName": "searchComicAndAuthorQuery", "variables": { "keyword": keyword }, "query": "query searchComicAndAuthorQuery($keyword: String!) {\n  searchComicsAndAuthors(keyword: $keyword) {\n    comics {\n      id\n      title\n      status\n      year\n      imageUrl\n      authors {\n        id\n        name\n        __typename\n      }\n      categories {\n        id\n        name\n        __typename\n      }\n      dateUpdated\n      monthViews\n      views\n      favoriteCount\n      lastBookUpdate\n      lastChapterUpdate\n      __typename\n    }\n    authors {\n      id\n      name\n      chName\n      enName\n      wikiLink\n      comicCount\n      views\n      __typename\n    }\n    __typename\n  }\n}" })
+
+            function parseComic(comic) {
+                let author = ''
+                if (comic.authors.length > 0) {
+                    author = comic.authors[0].name
+                }
+                let tags = []
+                comic.categories.forEach((c) => {
+                    tags.push(c.name)
+                })
+
+                function getTimeDifference(date) {
+                    const now = new Date();
+                    const timeDifference = now - date;
+
+                    const millisecondsPerHour = 1000 * 60 * 60;
+                    const millisecondsPerDay = millisecondsPerHour * 24;
+
+                    if (timeDifference < millisecondsPerHour) {
+                        return '剛剛更新';
+                    } else if (timeDifference < millisecondsPerDay) {
+                        const hours = Math.floor(timeDifference / millisecondsPerHour);
+                        return `${hours}小時前更新`;
+                    } else {
+                        const days = Math.floor(timeDifference / millisecondsPerDay);
+                        return `${days}天前更新`;
+                    }
+                }
+
+                let updateTime = new Date(comic.dateUpdated)
+                let description = getTimeDifference(updateTime)
+
+                return {
+                    id: comic.id,
+                    title: comic.title,
+                    subTitle: author,
+                    cover: comic.imageUrl,
+                    tags: tags,
+                    description: description
+                }
+            }
+
+            return {
+                comics: json.data.searchComicsAndAuthors.comics.map(parseComic),
+                // 没找到最大页数的接口
+                maxPage: null
+            }
         },
 
         optionList: []
@@ -198,36 +267,52 @@ class Komiic extends ComicSource {
         /// 添加或者删除收藏
         addOrDelFavorite: async (comicId, folderId, isAdding) => {
             let query = {}
-            if(isAdding){
-                query = {"operationName":"addComicToFolder","variables":{"comicId":comicId,"folderId":folderId},"query":"mutation addComicToFolder($comicId: ID!, $folderId: ID!) {\n  addComicToFolder(comicId: $comicId, folderId: $folderId)\n}"}
+            if (isAdding) {
+                query = { "operationName": "addComicToFolder", "variables": { "comicId": comicId, "folderId": folderId }, "query": "mutation addComicToFolder($comicId: ID!, $folderId: ID!) {\n  addComicToFolder(comicId: $comicId, folderId: $folderId)\n}" }
             } else {
-                query = {"operationName":"removeComicToFolder","variables":{"comicId":comicId,"folderId":folderId},"query":"mutation removeComicToFolder($comicId: ID!, $folderId: ID!) {\n  removeComicToFolder(comicId: $comicId, folderId: $folderId)\n}"}
+                query = { "operationName": "removeComicToFolder", "variables": { "comicId": comicId, "folderId": folderId }, "query": "mutation removeComicToFolder($comicId: ID!, $folderId: ID!) {\n  removeComicToFolder(comicId: $comicId, folderId: $folderId)\n}" }
             }
             await this.queryJson(query)
             return "ok"
         },
         // 加载收藏夹, 仅当multiFolder为true时有效
-        loadFolders: async () => {
-            let json = await this.queryJson({"operationName":"myFolder","variables":{},"query":"query myFolder {\n  folders {\n    id\n    key\n    name\n    views\n    comicCount\n    dateCreated\n    dateUpdated\n    __typename\n  }\n}"})
+        // 当comicId不为null时, 需要同时返回包含该漫画的收藏夹
+        loadFolders: async (comicId) => {
+            let json = await this.queryJson({ "operationName": "myFolder", "variables": {}, "query": "query myFolder {\n  folders {\n    id\n    key\n    name\n    views\n    comicCount\n    dateCreated\n    dateUpdated\n    __typename\n  }\n}" })
             let folders = {}
             json.data.folders.forEach((f) => {
                 folders[f.id] = f.name
             })
-            return folders
+            let favorited = null
+            if (comicId) {
+                let json2 = await this.queryJson({ "operationName": "comicInAccountFolders", "variables": { "comicId": comicId }, "query": "query comicInAccountFolders($comicId: ID!) {\n  comicInAccountFolders(comicId: $comicId)\n}" })
+                favorited = json2.data.comicInAccountFolders
+            }
+            return {
+                folders: folders,
+                favorited: favorited
+            }
         },
         /// 创建收藏夹
         addFolder: async (name) => {
-            let json = await this.queryJson({"operationName":"createFolder","variables":{"name":name},"query":"mutation createFolder($name: String!) {\n  createFolder(name: $name) {\n    id\n    key\n    name\n    account {\n      id\n      nickname\n      __typename\n    }\n    comicCount\n    views\n    dateCreated\n    dateUpdated\n    __typename\n  }\n}"})
+            let json = await this.queryJson({ "operationName": "createFolder", "variables": { "name": name }, "query": "mutation createFolder($name: String!) {\n  createFolder(name: $name) {\n    id\n    key\n    name\n    account {\n      id\n      nickname\n      __typename\n    }\n    comicCount\n    views\n    dateCreated\n    dateUpdated\n    __typename\n  }\n}" })
             return "ok"
         },
         deleteFolder: async (id) => {
-            let json = await this.queryJson({"operationName":"removeFolder","variables":{"folderId":id},"query":"mutation removeFolder($folderId: ID!) {\n  removeFolder(folderId: $folderId)\n}"})
+            let json = await this.queryJson({ "operationName": "removeFolder", "variables": { "folderId": id }, "query": "mutation removeFolder($folderId: ID!) {\n  removeFolder(folderId: $folderId)\n}" })
             return "ok"
         },
         /// 加载漫画
         loadComics: async (page, folder) => {
-            let json = await this.queryJson({"operationName":"folderComicIds","variables":{"folderId":folder,"pagination":{"limit":30,"offset":(page-1)*30,"orderBy":"DATE_UPDATED","status":"","asc":true}},"query":"query folderComicIds($folderId: ID!, $pagination: Pagination!) {\n  folderComicIds(folderId: $folderId, pagination: $pagination) {\n    folderId\n    key\n    comicIds\n    __typename\n  }\n}"})
-            return this.queryComics({"operationName":"comicByIds","variables":{"comicIds":json.data.folderComicIds.comicIds},"query":"query comicByIds($comicIds: [ID]!) {\n  comicByIds(comicIds: $comicIds) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}"})
+            let json = await this.queryJson({ "operationName": "folderComicIds", "variables": { "folderId": folder, "pagination": { "limit": 30, "offset": (page - 1) * 30, "orderBy": "DATE_UPDATED", "status": "", "asc": true } }, "query": "query folderComicIds($folderId: ID!, $pagination: Pagination!) {\n  folderComicIds(folderId: $folderId, pagination: $pagination) {\n    folderId\n    key\n    comicIds\n    __typename\n  }\n}" })
+            let ids = json.data.folderComicIds.comicIds
+            if (ids.length == 0) {
+                return {
+                    comics: [],
+                    maxPage: 1
+                }
+            }
+            return this.queryComics({ "operationName": "comicByIds", "variables": { "comicIds": ids }, "query": "query comicByIds($comicIds: [ID]!) {\n  comicByIds(comicIds: $comicIds) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}" })
         }
     }
 
@@ -235,18 +320,22 @@ class Komiic extends ComicSource {
     comic = {
         // 加载漫画信息
         loadInfo: async (id) => {
-            let json1 = await this.queryJson({"operationName":"recommendComicById","variables":{"comicId":id},"query":"query recommendComicById($comicId: ID!) {\n  recommendComicById(comicId: $comicId)\n}"})
+            let json1 = await this.queryJson({ "operationName": "recommendComicById", "variables": { "comicId": id }, "query": "query recommendComicById($comicId: ID!) {\n  recommendComicById(comicId: $comicId)\n}" })
             let recommend = json1.data.recommendComicById
             recommend.push(id)
 
-            async function getFavoriteStatus(id){
-                let json = await this.queryJson({"operationName":"comicInAccountFolders","variables":{"comicId":id},"query":"query comicInAccountFolders($comicId: ID!) {\n  comicInAccountFolders(comicId: $comicId)\n}"})
+            let getFavoriteStatus = async () => {
+                let token = this.loadData('token')
+                if (!token) {
+                    return false
+                }
+                let json = await this.queryJson({ "operationName": "comicInAccountFolders", "variables": { "comicId": id }, "query": "query comicInAccountFolders($comicId: ID!) {\n  comicInAccountFolders(comicId: $comicId)\n}" })
                 let folders = json.data.comicInAccountFolders
                 return folders.length !== 0
             }
 
-            async function getChapter(id){
-                let json = await this.queryJson({"operationName":"chapterByComicId","variables":{"comicId":"2464"},"query":"query chapterByComicId($comicId: ID!) {\n  chaptersByComicId(comicId: $comicId) {\n    id\n    serial\n    type\n    dateCreated\n    dateUpdated\n    size\n    __typename\n  }\n}"})
+            let getChapter = async () => {
+                let json = await this.queryJson({ "operationName": "chapterByComicId", "variables": { "comicId": id }, "query": "query chapterByComicId($comicId: ID!) {\n  chaptersByComicId(comicId: $comicId) {\n    id\n    serial\n    type\n    dateCreated\n    dateUpdated\n    size\n    __typename\n  }\n}" })
                 let res = {}
                 json.data.chaptersByComicId.forEach((c) => {
                     res[c.id] = c.serial
@@ -255,9 +344,8 @@ class Komiic extends ComicSource {
             }
 
             let results = await Promise.all([
-                this.queryComics({"operationName":"comicByIds","variables":{"comicIds":recommend},"query":"query comicByIds($comicIds: [ID]!) {\n  comicByIds(comicIds: $comicIds) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}"}),
-                getFavoriteStatus.bind(this).call(id),
-                getChapter.bind(this).call(id)
+                this.queryComics({ "operationName": "comicByIds", "variables": { "comicIds": recommend }, "query": "query comicByIds($comicIds: [ID]!) {\n  comicByIds(comicIds: $comicIds) {\n    id\n    title\n    status\n    year\n    imageUrl\n    authors {\n      id\n      name\n      __typename\n    }\n    categories {\n      id\n      name\n      __typename\n    }\n    dateUpdated\n    monthViews\n    views\n    favoriteCount\n    lastBookUpdate\n    lastChapterUpdate\n    __typename\n  }\n}" }),
+                getChapter.call()
             ])
 
             let info = results[0].comics.pop()
@@ -267,37 +355,44 @@ class Komiic extends ComicSource {
                 title: info.title,
                 // string 封面url
                 cover: info.cover,
-                // string
-                description: description,
                 // map<string, string[]> 标签
                 tags: {
-                    "作者": info.author,
+                    "作者": [info.subTitle],
                     "更新": [info.description],
                     "标签": info.tags
                 },
                 // map<string, string>?, key为章节id, value为章节名称
-                chapters: results[2],
-                // bool
-                isFavorite: results[1],
+                chapters: results[1],
                 recommend: results[0].comics
             }
         },
         // 获取章节图片
         loadEp: async (comicId, epId) => {
-            let json = await this.queryJson({"operationName":"imagesByChapterId","variables":{"chapterId":epId},"query":"query imagesByChapterId($chapterId: ID!) {\n  imagesByChapterId(chapterId: $chapterId) {\n    id\n    kid\n    height\n    width\n    __typename\n  }\n}"})
+            let json = await this.queryJson({ "operationName": "imagesByChapterId", "variables": { "chapterId": epId }, "query": "query imagesByChapterId($chapterId: ID!) {\n  imagesByChapterId(chapterId: $chapterId) {\n    id\n    kid\n    height\n    width\n    __typename\n  }\n}" })
             return {
                 images: json.data.imagesByChapterId.map((i) => {
                     return `https://komiic.com/api/image/${i.kid}`
                 })
             }
         },
+        // 可选, 调整图片加载的行为
+        onImageLoad: (url, comicId, epId) => {
+            return {
+                headers: {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'referer': `https://komiic.com/comic/${comicId}/chapter/${epId}/images/all`
+                }
+            }
+        },
         // 加载评论
         loadComments: async (comicId, subId, page, replyTo) => {
-            let json = replyTo
-                ? await this.queryJson({"operationName":"messageChan","variables":{"messageId":replyTo},"query":"query messageChan($messageId: ID!) {\n  messageChan(messageId: $messageId) {\n    id\n    comicId\n    account {\n      id\n      nickname\n      profileText\n      profileTextColor\n      profileBackgroundColor\n      profileImageUrl\n      __typename\n    }\n    message\n    replyTo {\n      id\n      __typename\n    }\n    upCount\n    downCount\n    dateUpdated\n    dateCreated\n    __typename\n  }\n}"}) 
-                : await this.queryJson({"operationName":"getMessagesByComicId","variables":{"comicId":comicId,"pagination":{"limit":100,"offset":(page-1)*100,"orderBy":"DATE_UPDATED","asc":true}},"query":"query getMessagesByComicId($comicId: ID!, $pagination: Pagination!) {\n  getMessagesByComicId(comicId: $comicId, pagination: $pagination) {\n    id\n    comicId\n    account {\n      id\n      nickname\n      profileText\n      profileTextColor\n      profileBackgroundColor\n      profileImageUrl\n      __typename\n    }\n    message\n    replyTo {\n      id\n      message\n      account {\n        id\n        nickname\n        profileText\n        profileTextColor\n        profileBackgroundColor\n        profileImageUrl\n        __typename\n      }\n      __typename\n    }\n    upCount\n    downCount\n    dateUpdated\n    dateCreated\n    __typename\n  }\n}"})
+            let operationName = replyTo ? "messageChan" : "getMessagesByComicId"
+            let promise = replyTo
+                ? this.queryJson({ "operationName": "messageChan", "variables": { "messageId": replyTo }, "query": "query messageChan($messageId: ID!) {\n  messageChan(messageId: $messageId) {\n    id\n    comicId\n    account {\n      id\n      nickname\n      profileText\n      profileTextColor\n      profileBackgroundColor\n      profileImageUrl\n      __typename\n    }\n    message\n    replyTo {\n      id\n      __typename\n    }\n    upCount\n    downCount\n    dateUpdated\n    dateCreated\n    __typename\n  }\n}" })
+                : this.queryJson({ "operationName": "getMessagesByComicId", "variables": { "comicId": comicId, "pagination": { "limit": 100, "offset": (page - 1) * 100, "orderBy": "DATE_UPDATED", "asc": true } }, "query": "query getMessagesByComicId($comicId: ID!, $pagination: Pagination!) {\n  getMessagesByComicId(comicId: $comicId, pagination: $pagination) {\n    id\n    comicId\n    account {\n      id\n      nickname\n      profileText\n      profileTextColor\n      profileBackgroundColor\n      profileImageUrl\n      __typename\n    }\n    message\n    replyTo {\n      id\n      message\n      account {\n        id\n        nickname\n        profileText\n        profileTextColor\n        profileBackgroundColor\n        profileImageUrl\n        __typename\n      }\n      __typename\n    }\n    upCount\n    downCount\n    dateUpdated\n    dateCreated\n    __typename\n  }\n}" })
+            let json = await promise
             return {
-                comments: json.data.getMessagesByComicId.map(e => {
+                comments: json.data[operationName].map(e => {
                     return {
                         // string
                         userName: e.account.nickname,
@@ -314,16 +409,15 @@ class Komiic extends ComicSource {
                         id: e.id,
                     }
                 }),
-                // number
-                maxPage: data.results.maxPage,
+                maxPage: null,
             }
         },
         // 发送评论, 返回任意值表示成功
         sendComment: async (comicId, subId, content, replyTo) => {
-            if(!replyTo){
+            if (!replyTo) {
                 replyTo = "0"
             }
-            let json = await this.queryJson({"operationName":"addMessageToComic","variables":{"comicId":comicId,"message":content,"replyToId":replyTo},"query":"mutation addMessageToComic($comicId: ID!, $replyToId: ID!, $message: String!) {\n  addMessageToComic(message: $message, comicId: $comicId, replyToId: $replyToId) {\n    id\n    message\n    comicId\n    account {\n      id\n      nickname\n      __typename\n    }\n    replyTo {\n      id\n      message\n      account {\n        id\n        nickname\n        profileText\n        profileTextColor\n        profileBackgroundColor\n        profileImageUrl\n        __typename\n      }\n      __typename\n    }\n    dateCreated\n    dateUpdated\n    __typename\n  }\n}"})
+            let json = await this.queryJson({ "operationName": "addMessageToComic", "variables": { "comicId": comicId, "message": content, "replyToId": replyTo }, "query": "mutation addMessageToComic($comicId: ID!, $replyToId: ID!, $message: String!) {\n  addMessageToComic(message: $message, comicId: $comicId, replyToId: $replyToId) {\n    id\n    message\n    comicId\n    account {\n      id\n      nickname\n      __typename\n    }\n    replyTo {\n      id\n      message\n      account {\n        id\n        nickname\n        profileText\n        profileTextColor\n        profileBackgroundColor\n        profileImageUrl\n        __typename\n      }\n      __typename\n    }\n    dateCreated\n    dateUpdated\n    __typename\n  }\n}" })
             return "ok"
         }
     }
