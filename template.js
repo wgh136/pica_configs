@@ -437,16 +437,26 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
             ```
             */
         },
-        // 可选, 调整图片加载的行为
+        // 可选, 调整图片加载的行为; 如不需要, 删除此字段
         onImageLoad: (url, comicId, epId) => {
             /*
-            目前支持修改url和headers
+            ```
             return {
                 url: `${url}?id=comicId`,
+                // http method
+                method: 'GET',
+                // any
+                data: null,
                 headers: {
                     'user-agent': 'pica_comic/v3.1.0',
+                },
+                // 参数data和返回值均为 `ArrayBuffer`
+                // 注意: 使用此字段会导致图片数据被多次复制, 可能影响性能
+                onResponse: (data) => {
+                    return data
                 }
             }
+            ```
             */
 
             return {}
