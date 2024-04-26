@@ -6,7 +6,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.0"
+    version = "1.0.1"
 
     minAppVersion = "3.1.0"
 
@@ -42,6 +42,9 @@ class Komiic extends ComicSource {
         let json = JSON.parse(res.body)
 
         if (json.errors != undefined) {
+            if(json.errors[0].message.toString().indexOf('token is expired') >= 0){
+                throw 'Login expired'
+            }
             throw json.errors[0].message
         }
 
@@ -402,7 +405,7 @@ class Komiic extends ComicSource {
                         content: e.message,
                         // string?
                         time: e.dateUpdated,
-                        // number? 
+                        // number?
                         // TODO: 没有数量信息, 但是设为null会禁用回复功能
                         replyCount: 0,
                         // string
