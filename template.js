@@ -407,13 +407,14 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
                 cover: cover,
                 // string
                 description: description,
-                // map<string, string[]> 标签
+                // Map<string, string[]> | object 标签
                 tags: {
                     "作者": authors,
                     "更新": [updateTime],
                     "标签": tags
                 },
-                // map<string, string>?, key为章节id, value为章节名称
+                // Map<string, string>? | object, key为章节id, value为章节名称
+                // 注意: 为了保证章节顺序, 最好使用Map, 使用object不能保证顺序
                 chapters: chapters,
                 // bool 注意, 如果是多收藏式的网络收藏, 将此项设置为null, 从而可以在漫画详情页面, 对每个单独的收藏夹执行收藏或者取消收藏操作
                 isFavorite: isFavorite,
