@@ -6,7 +6,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.1"
+    version = "1.0.2"
 
     minAppVersion = "3.1.0"
 
@@ -339,9 +339,23 @@ class Komiic extends ComicSource {
 
             let getChapter = async () => {
                 let json = await this.queryJson({ "operationName": "chapterByComicId", "variables": { "comicId": id }, "query": "query chapterByComicId($comicId: ID!) {\n  chaptersByComicId(comicId: $comicId) {\n    id\n    serial\n    type\n    dateCreated\n    dateUpdated\n    size\n    __typename\n  }\n}" })
-                let res = {}
-                json.data.chaptersByComicId.forEach((c) => {
-                    res[c.id] = c.serial
+                let all = json.data.chaptersByComicId
+                let books = [], chapters = []
+                all.forEach((c) => {
+                    if(c.type == 'book') {
+                        books.push(c)
+                    } else {
+                        chapters.push(c)
+                    }
+                })
+                let res = new Map()
+                books.forEach((c) => {
+                    let name = '卷' + c.serial
+                    res.set(c.id, name)
+                })
+                chapters.forEach((c) => {
+                    let name = c.serial
+                    res.set(c.id, name)
                 })
                 return res
             }
