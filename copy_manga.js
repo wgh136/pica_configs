@@ -4,7 +4,7 @@ class CopyManga extends ComicSource {
 
     key = "copy_manga"
 
-    version = "1.1.0"
+    version = "1.1.1"
 
     minAppVersion = "3.1.0"
 
@@ -357,7 +357,7 @@ class CopyManga extends ComicSource {
                 data.results.list.forEach((e) => {
                     let title = e.name;
                     let id = e.uuid;
-                    eps[id] = title;
+                    eps.set(id, title);
                 });
                 let maxChapter = data.results.total;
                 if (maxChapter > 500) {
@@ -374,7 +374,7 @@ class CopyManga extends ComicSource {
                         data.results.list.forEach((e) => {
                             let title = e.name;
                             let id = e.uuid;
-                            eps[id] = title;
+                            eps.set(id, title)
                         });
                         offset += 500;
                     }
@@ -432,23 +432,23 @@ class CopyManga extends ComicSource {
                 `https://api.copymanga.tv/api/v3/comic/${comicId}/chapter2/${epId}?platform=3`,
                 this.headers
             );
-    
+
             if (res.status !== 200){
                 throw `Invalid status code: ${res.status}`;
             }
-    
+
             let data = JSON.parse(res.body);
-    
+
             let imagesUrls = data.results.chapter.contents.map(e => e.url)
-    
+
             let orders = data.results.chapter.words
-    
+
             let images = imagesUrls.map(e => "")
-    
+
             for(let i=0; i < imagesUrls.length; i++){
                 images[orders[i]] = imagesUrls[i]
             }
-    
+
             return {
                 images: images
             }
@@ -462,15 +462,15 @@ class CopyManga extends ComicSource {
                 url,
                 this.headers,
             );
-    
+
             if (res.status !== 200){
                 throw `Invalid status code: ${res.status}`;
             }
-    
+
             let data = JSON.parse(res.body);
-    
+
             let total = data.results.total;
-    
+
             return {
                 comments: data.results.list.map(e => {
                     return {
@@ -501,12 +501,12 @@ class CopyManga extends ComicSource {
                 },
                 `comic_id=${subId}&comment=${encodeURIComponent(content)}&reply_id=${replyTo}`,
             );
-    
+
             if (res.status === 401){
                 error(`Login expired`);
                 return;
             }
-    
+
             if (res.status !== 200){
                 throw `Invalid status code: ${res.status}`;
             } else {
