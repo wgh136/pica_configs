@@ -4,13 +4,15 @@ class CopyManga extends ComicSource {
 
     key = "copy_manga"
 
-    version = "1.1.1"
+    version = "1.1.2"
 
     minAppVersion = "3.1.0"
 
     url = "https://raw.githubusercontent.com/wgh136/pica_configs/master/copy_manga.js"
 
     headers = {}
+
+    static copyVersion = "2.2.0"
 
     init() {
         let token = this.loadData("token");
@@ -20,13 +22,13 @@ class CopyManga extends ComicSource {
             token = " " + token;
         }
         this.headers = {
-            "User-Agent": "COPY/2.1.7",
+            "User-Agent": "COPY/" + CopyManga.copyVersion,
             "Accept": "*/*",
             "Accept-Encoding": "gzip",
             "source": "copyApp",
             "webp": "1",
             "region": "1",
-            "version": "2.1.7",
+            "version": CopyManga.copyVersion,
             "authorization": `Token${token}`,
             "platform": "3",
         }
@@ -52,13 +54,13 @@ class CopyManga extends ComicSource {
                 let token = data.results.token
                 this.saveData('token', token)
                 this.headers = {
-                    "User-Agent": "COPY/2.1.7",
+                    "User-Agent": "COPY/" + CopyManga.copyVersion,
                     "Accept": "*/*",
                     "Accept-Encoding": "gzip",
                     "source": "copyApp",
                     "webp": "1",
                     "region": "1",
-                    "version": "2.1.7",
+                    "version": CopyManga.copyVersion,
                     "authorization": `Token ${token}`,
                     "platform": "3",
                 }
@@ -346,7 +348,7 @@ class CopyManga extends ComicSource {
         loadInfo: async (id) => {
             async function getChapters(id) {
                 var res = await Network.get(
-                    `https://api.copymanga.tv/api/v3/comic/${id}/group/default/chapters?limit=500&offset=0&platform=3`,
+                    `https://api.copymanga.tv/api/v3/comic/${id}/group/default/chapters?limit=100&offset=0&platform=3`,
                     this.headers
                 );
                 if (res.status !== 200) {
