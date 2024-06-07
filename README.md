@@ -8,8 +8,12 @@ Pica Comic 的配置文件仓库
 
 ### 爱看漫
 
-url: https://raw.githubusercontent.com/wgh136/pica_configs/master/ikmmh.toml
+url: https://raw.githubusercontent.com/wgh136/pica_configs/master/ikmmh.js
 
 ### 拷贝漫画
 
-url: https://raw.githubusercontent.com/wgh136/pica_configs/master/copy_manga.toml
+url: https://raw.githubusercontent.com/wgh136/pica_configs/master/copy_manga.js
+
+### Komiic
+
+url: https://raw.githubusercontent.com/wgh136/pica_configs/master/komiic.js
