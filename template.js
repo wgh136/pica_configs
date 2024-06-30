@@ -115,7 +115,7 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
         {
             /// 标题
             /// 标题同时用作标识符, 不能重复
-            title: "拷贝漫画",
+            title: "",
 
             /// singlePageWithMultiPart 或者 multiPageComicList
             type: "singlePageWithMultiPart",
@@ -461,6 +461,28 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
             */
 
             return {}
+        },
+        // [v3.1.4添加] 可选, 调整缩略图(封面, 预览, 头像等)加载的行为; 如不需要, 删除此字段
+        onThumbnailLoad: (url) => {
+            /*
+            ```
+            return {
+                url: `${url}?id=comicId`,
+                // http method
+                method: 'GET',
+                // any
+                data: null,
+                headers: {
+                    'user-agent': 'pica_comic/v3.1.0',
+                },
+                // 参数data和返回值均为 `ArrayBuffer`
+                // 注意: 使用此字段会导致图片数据被多次复制, 可能影响性能
+                onResponse: (data) => {
+                    return data
+                }
+            }
+            ```
+            */
         },
         // 加载评论
         loadComments: async (comicId, subId, page, replyTo) => {
