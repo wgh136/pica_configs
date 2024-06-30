@@ -4,7 +4,7 @@ class CopyManga extends ComicSource {
 
     key = "copy_manga"
 
-    version = "1.1.2"
+    version = "1.1.3"
 
     minAppVersion = "3.1.0"
 
@@ -348,7 +348,7 @@ class CopyManga extends ComicSource {
         loadInfo: async (id) => {
             async function getChapters(id) {
                 var res = await Network.get(
-                    `https://api.copymanga.tv/api/v3/comic/${id}/group/default/chapters?limit=100&offset=0&platform=3`,
+                    `https://api.copymanga.tv/api/v3/comic/${id}/group/default/chapters?limit=500&offset=0&platform=3`,
                     this.headers
                 );
                 if (res.status !== 200) {

@@ -6,7 +6,7 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
     // 唯一标识符
     key = "ikmmh"
 
-    version = "1.1.0"
+    version = "1.1.1"
 
     minAppVersion = "3.1.0"
 
@@ -273,7 +273,7 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
                 };
             }
 
-            throw {
+            return {
                 comics: document.querySelectorAll("div.classification").map(parseComic),
                 maxPage: 1
             }

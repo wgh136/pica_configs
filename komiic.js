@@ -6,7 +6,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.2"
+    version = "1.0.3"
 
     minAppVersion = "3.1.0"
 
@@ -256,7 +256,7 @@ class Komiic extends ComicSource {
             return {
                 comics: json.data.searchComicsAndAuthors.comics.map(parseComic),
                 // 没找到最大页数的接口
-                maxPage: null
+                maxPage: 1
             }
         },
 
