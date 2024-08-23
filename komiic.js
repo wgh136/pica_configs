@@ -6,7 +6,7 @@ class Komiic extends ComicSource {
     // 唯一标识符
     key = "Komiic"
 
-    version = "1.0.3"
+    version = "1.0.4"
 
     minAppVersion = "3.1.0"
 
@@ -110,7 +110,7 @@ class Komiic extends ComicSource {
         /// 返回任意值表示登录成功
         login: async (account, pwd) => {
             let res = await Network.post(
-                'https://komiic.com/auth/login',
+                'https://komiic.com/api/login',
                 this.headers,
                 {
                     email: account,
