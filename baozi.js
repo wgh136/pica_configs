@@ -201,13 +201,13 @@ class Baozi extends ComicSource {
         addOrDelFavorite: async (comicId, folderId, isAdding) => {
             if(!isAdding) {
                 let res = await Network.post(`${this.baseUrl}/user/operation_v2?op=del_bookmark&comic_id=${comicId}`)
-                if (res.status !== 200) {
+                if (!res.status || res.status >= 400) {
                     throw "Invalid status code: " + res.status
                 }
                 return 'ok'
             } else {
                 let res = await Network.post(`${this.baseUrl}/user/operation_v2?op=set_bookmark&comic_id=${comicId}&chapter_slot=0`)
-                if (res.status !== 200) {
+                if (!res.status || res.status >= 400) {
                     throw "Invalid status code: " + res.status
                 }
                 return 'ok'
