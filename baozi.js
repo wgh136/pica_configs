@@ -257,7 +257,7 @@ class Baozi extends ComicSource {
             let document = new HtmlDocument(res.body)
 
             let title = document.querySelector("h1.comics-detail__title").text.trim()
-            let cover = document.querySelector("div > amp-img").attributes['src']
+            let cover = document.querySelector("div.l-content > div > div > amp-img").attributes['src']
             let author = document.querySelector("h2.comics-detail__author").text.trim()
             let tags = document.querySelectorAll("div.tag-list > span").map(e => e.text.trim())
             let updateTime = document.querySelector("div.supporting-text > div > span > em").text.trim().replace('(', '').replace(')', '')
