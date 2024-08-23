@@ -483,6 +483,7 @@ class NewComicSource extends ComicSource {  // 首行必须为class...
             }
             ```
             */
+            return {}
         },
         // 加载评论
         loadComments: async (comicId, subId, page, replyTo) => {
